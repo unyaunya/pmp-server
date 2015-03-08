@@ -17,6 +17,12 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+#Python
+*.pyc
+
+#sqlite
+*.db
+
 # =========================
 # Operating System Files
 # =========================
