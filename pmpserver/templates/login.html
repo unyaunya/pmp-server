@@ -13,6 +13,7 @@
     <input type="text" name="email" />
     <input type="password" name="password" />
     {{ form.csrf_token }}
+    {{ form.hidden_tag() }}
     <input type="submit" value="Go">
   </form>
 {% endblock %}

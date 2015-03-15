@@ -28,6 +28,10 @@ div.page {
     clear:both;
 }
 
+.error {
+    color:red;
+}
+
 
 #menu ul{
 	margin: 0;

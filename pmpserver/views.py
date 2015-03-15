@@ -9,9 +9,31 @@ from flask import Flask, g, request, session, render_template, \
      flash, redirect, url_for
 from datetime import datetime
 
-from . import app
+from . import app, db, lm, oid
 from .forms import EmailPasswordForm
+from .models import User
+
 #from .util import ts
+
+@lm.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+@app.route('/login', methods=['GET', 'POST'])
+@oid.loginhandler
+def login():
+    if g.user is not None and g.user.is_authenticated():
+        return redirect(url_for('index'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        session['remember_me'] = form.remember_me.data
+        return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
+    return render_template('login.html',
+                           title='Sign In',
+                           form=form,
+                           providers=app.config['OPENID_PROVIDERS'])
+
+#------------------------------------------------------------------------------
 
 def init_db():
     """DB初期化。コマンドラインから呼び出す"""
@@ -37,6 +59,13 @@ def projectsdir():
 
 @app.before_request
 def before_request():
+    if 'logged_in' in session:
+        g.logged_in = True
+        g.userid = session['userid']
+    else:
+        g.logged_in = False
+        g.userid = ''
+
     g.db = connect_db()
     #g.user = get_user
 
@@ -45,7 +74,7 @@ def teardown_request(exception):
     g.db.close()
 
 @app.route('/login', methods=["GET", "POST"])
-def login():
+def _login():
     error = None
     form = EmailPasswordForm()
     if form.validate_on_submit():
@@ -56,32 +85,17 @@ def login():
         print(form.email.data)
         print(form.password)
         print(form.password.data)
-        return redirect(url_for('index'))
+        #return redirect(url_for('index'))
         if form.email.data != app.config['USERID']:
             error = 'Invalid userid'
         elif form.password.data != app.config['PASSWORD']:
             error = 'Invalid password'
         else:
             session['logged_in'] = True
-            session['userid'] = form.email.data
+            session['user_id'] = form.email.data
             flash('You were logged in')
             return redirect(url_for('index'))
     return render_template('login.html', form=form, error=error)
-
-@app.route('/login', methods=['GET', 'POST'])
-def __login():
-    error = None
-    if request.method == 'POST':
-        if request.form['userid'] != app.config['USERID']:
-            error = 'Invalid userid'
-        elif request.form['password'] != app.config['PASSWORD']:
-            error = 'Invalid password'
-        else:
-            session['logged_in'] = True
-            session['userid'] = request.form['userid']
-            flash('You were logged in')
-            return redirect(url_for('index'))
-    return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
