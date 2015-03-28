@@ -5,103 +5,126 @@ import os
 import json
 import sqlite3
 from contextlib import closing
-from flask import Flask, g, request, session, render_template, \
+from flask import Flask, Response, current_app, g, request, session, render_template, \
      flash, redirect, url_for
 from datetime import datetime
+from flask.ext.login import login_user, logout_user, current_user, login_required
+from flask.ext.principal import Principal, UserNeed, RoleNeed
+from flask.ext.principal import Identity, identity_loaded, identity_changed
 
-from . import app, db, lm, oid
-from .forms import EmailPasswordForm
+from . import app, db, lm
+from .forms import LoginForm, UserEntryForm, UserEditForm
 from .models import User
+from .permission import admin_permission
+
 
 #from .util import ts
 
+#-------------------------------------------------------------------------------
+# for database
+#-------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------
+# for Login Manager / User Information Provider
+#-------------------------------------------------------------------------------
+
 @lm.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return User.query.get(id)
 
-@app.route('/login', methods=['GET', 'POST'])
-@oid.loginhandler
-def login():
-    if g.user is not None and g.user.is_authenticated():
-        return redirect(url_for('index'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        session['remember_me'] = form.remember_me.data
-        return oid.try_login(form.openid.data, ask_for=['nickname', 'email'])
-    return render_template('login.html',
-                           title='Sign In',
-                           form=form,
-                           providers=app.config['OPENID_PROVIDERS'])
-
-#------------------------------------------------------------------------------
-
-def init_db():
-    """DB初期化。コマンドラインから呼び出す"""
-    with closing(connect_db()) as db:
-        with app.open_resource('schema.sql') as f:
-            db.cursor().executescript(f.read().decode('utf-8'))
-        db.commit()
-
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
-
-def get_user(userid):
-    cur = g.db.execute('select id, passwd, email, name, apikey, role from users where id = ?', [userid])
-    users = [dict(id=row[0], passwd=row[1], email=row[2], name=row[3],
-                apikey=row[4], role=row[5]) for row in cur.fetchall()]
-    if len(users) != 1:
-        return None
-    else:
-        return users[0]
-
-def projectsdir():
-    return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'projects')
-
-@app.before_request
-def before_request():
-    if 'logged_in' in session:
-        g.logged_in = True
-        g.userid = session['userid']
-    else:
-        g.logged_in = False
-        g.userid = ''
-
-    g.db = connect_db()
-    #g.user = get_user
-
-@app.teardown_request
-def teardown_request(exception):
-    g.db.close()
+lm.login_view = 'login'
+lm.login_message = u"ようこそここへクッククック"
 
 @app.route('/login', methods=["GET", "POST"])
-def _login():
+def login():
+    if current_user.is_authenticated():
+        return redirect(url_for('index'))
     error = None
-    form = EmailPasswordForm()
+    form = LoginForm()
     if form.validate_on_submit():
-        print('validated')
-        # パスワードのチェックとログイン処理
-        # [...]
-        print(form.email)
-        print(form.email.data)
-        print(form.password)
-        print(form.password.data)
-        #return redirect(url_for('index'))
-        if form.email.data != app.config['USERID']:
-            error = 'Invalid userid'
-        elif form.password.data != app.config['PASSWORD']:
-            error = 'Invalid password'
-        else:
-            session['logged_in'] = True
-            session['user_id'] = form.email.data
+        user = load_user(form.id.data)
+        if (user is not None) and (form.password.data == user.passwd):
+            login_user(user, remember=form.remember_me.data)
+            # Tell Flask-Principal the identity changed
+            identity_changed.send(current_app._get_current_object(),
+                                  identity=Identity(user.id))
             flash('You were logged in')
-            return redirect(url_for('index'))
+            return redirect(request.args.get('next') or url_for('index'))
+        error = 'Invalid id or password'
     return render_template('login.html', form=form, error=error)
 
 @app.route('/logout')
+@login_required
 def logout():
-    session.pop('logged_in', None)
+    logout_user()
     flash('You were logged out')
     return redirect(url_for('index'))
+
+
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+    # Set the identity user object
+    identity.user = current_user
+
+    # Add the UserNeed to the identity
+    if hasattr(current_user, 'id'):
+        identity.provides.add(UserNeed(current_user.id))
+
+    # Assuming the User model has a list of roles, update the
+    # identity with the roles that the user provides
+    if hasattr(current_user, 'roles'):
+        for role in current_user.roles:
+            identity.provides.add(RoleNeed(role.name))
+    if hasattr(current_user, 'role'):
+        identity.provides.add(RoleNeed(current_user.role))
+
+#-------------------------------------------------------------------------------
+# for user management
+#-------------------------------------------------------------------------------
+@app.route('/users.html')
+@admin_permission.require()
+def users():
+    return render_template('users.html', users=User.query.all())
+
+@app.route('/edit_user/<userid>', methods=['GET', 'POST'])
+def edit_user(userid):
+    user = User.query.get_or_404(userid)
+    form = UserEditForm()
+    if form.validate_on_submit():
+        form.copy_to(user)
+        db.session.commit()
+    form.copy_from(user)
+    return render_template('edituser.html', form=form, user=user)
+
+@app.route('/add_user', methods=['GET', 'POST'])
+@admin_permission.require()
+def add_user():
+    form = UserEntryForm()
+    if form.validate_on_submit():
+        user = User()
+        form.copy_to(user)
+        db.session.add(user)
+        db.session.commit()
+        flash('New user was successfully posted')
+        return redirect(url_for('add_user'))
+    return render_template('adduser.html', form=form)
+
+
+#-------------------------------------------------------------------------------
+# protect a view with a principal for that need
+@app.route('/admin')
+@admin_permission.require()
+def do_admin_index():
+    return Response('Only if you are an admin')
+
+
+
+
+#------------------------------------------------------------------------------
+
+def projectsdir():
+    return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'projects')
 
 @app.route('/')
 def index():
@@ -124,43 +147,6 @@ def project_list():
     path = projectsdir()
     files = [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
     return render_template('projects.html', projects=files)
-
-@app.route('/users.html')
-def users():
-    cur = g.db.execute('select id, passwd, email, name, apikey from users order by id desc')
-    users = [dict(id=row[0], passwd=row[1], email=row[2], name=row[3],
-               apikey=row[4]) for row in cur.fetchall()]
-    return render_template('users.html', users=users)
-
-@app.route('/add_user', methods=['GET', 'POST'])
-def add_user():
-    if request.method == 'GET':
-        return render_template('adduser.html')
-    elif request.method == 'POST':
-        if not session.get('logged_in'):
-            abort(401)
-        #print(request.form)
-        data = [request.form['id'],
-                request.form['passwd'],
-                request.form['email'],
-                request.form['name'],
-                'admin' if 'admin' in request.form else '']
-        #print(data)
-        g.db.execute("insert into users (id, passwd, email, name, apikey, role) values (?, ?, ?, ?, '', ?)", data)
-        g.db.commit()
-        flash('New user was successfully posted')
-        return redirect(url_for('add_user'))
-
-@app.route('/edit_user/<userid>', methods=['GET', 'POST'])
-def edit_user(userid):
-    if request.method == 'GET':
-        user = get_user(userid)
-        if user['role'] == 'admin':
-            user['admin'] = 'checked'
-        if user is not None:
-            return render_template('edituser.html', user=user)
-    elif request.method == 'POST':
-        return render_template('edituser.html')
 
 @app.route('/delete_user/<userid>', methods=['POST'])
 def delete_user(userid):

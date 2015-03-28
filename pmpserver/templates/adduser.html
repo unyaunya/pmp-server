@@ -2,21 +2,31 @@
 {% block title %}ユーザ追加{% endblock %}
 {% block header %}ユーザ追加{% endblock %}
 {% block content %}
-    {% if session.logged_in %}
     <form action="{{ url_for('add_user') }}" method=post class=add-user>
-      <dl>
-        <dt>ID:
-        <dd><input type=text size=30 name=id>
-        <dt>password:
-        <dd><input type=password size=48 name=passwd></textarea>
-        <dt>e-mail:
-        <dd><input type=text size=48 name=email>
-        <dt>name:
-        <dd><input type=text size=30 name=name>
-        <dt>admin:
-        <dd><input type=checkbox name=admin>
-        <dd><input type=submit value=OK>
-      </dl>
+      <table>
+        <tr>
+          <td>{{form.id.label}}</td>
+          <td>{{form.id()}}</td>
+	</tr>
+        <tr>
+          <td>{{form.password.label}}</td>
+          <td>{{form.password()}}</td>
+        </tr>
+        <tr>
+          <td>{{form.email.label}}</td>
+          <td>{{form.email()}}</td>
+        </tr>
+        <tr>
+          <td>{{form.name.label}}</td>
+          <td>{{form.name()}}</td>
+        </tr>
+        <tr>
+          <td>{{form.role.label}}</td>
+          <td>{{form.role()}}</td>
+        </tr>
+      </table>
+      {{ form.csrf_token }}
+      {{ form.hidden_tag() }}
+      <input type=submit value="OK"/>
     </form>
-    {% endif %}
 {% endblock %}

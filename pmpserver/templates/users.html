@@ -2,9 +2,8 @@
 {% block title %}ユーザ一覧{% endblock %}
 {% block header %}ユーザ一覧{% endblock %}
 {% block optionalmenu %}
-    {% if session.logged_in %}
+    {% if current_user.is_authenticated() %}
         <li><a href="/add_user">ユーザ追加</a></li>
-        <li><a href="{{url_for('edit_user', userid=g.user)}}">ユーザ設定</a></li>
     {% endif %}
 {% endblock %}
 {% block content %}

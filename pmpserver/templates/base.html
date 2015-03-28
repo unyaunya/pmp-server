@@ -9,11 +9,11 @@
 </head>
 <body>
 <div class=metanav>
-    {% if not session.logged_in %}
-        <a href="{{ url_for('login') }}">log in</a>
-    {% else %}
-        <p >ようこそ{{ g.userid }}さん</p>
+    {% if current_user.is_authenticated() %}
+        <p >ようこそ{{ current_user.name }}さん</p>
         <a href="{{ url_for('logout') }}">log out</a>
+    {% else %}
+        <a href="{{ url_for('login') }}">log in</a>
     {% endif %}
 </div>
 <div class=page>
@@ -29,7 +29,10 @@
                 <li><a href="/install.html">インストール</a></li>
                 <li><a href="/project_list.html">プロジェクト一覧</a></li>
                 <li><a href="/apikey.html">APIキー</a></li>
+                {% if current_user.is_authenticated() %}
                 <li><a href="/users.html">ユーザ一覧</a></li>
+                <li><a href="/admin">管理</a></li>
+                {% endif %}
                 {% block optionalmenu %}
                 {% endblock %}
             </ul>
@@ -40,6 +43,11 @@
         {% for message in get_flashed_messages() %}
         <div class=flash>{{ message }}</div>
         {% endfor %}
+	{% if form %}
+        {% for error in form.errors %}
+        <div class=flash>{{ error }}</div>
+        {% endfor %}
+	{% endif %}
         {% block content %}{% endblock %}
     </div>
     <div id="footer">

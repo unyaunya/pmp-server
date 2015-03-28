@@ -5,7 +5,7 @@ import os
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
-from flask.ext.openid import OpenID
+from flask.ext.principal import Principal, Permission, RoleNeed
 
 #create flask application
 app = Flask(__name__, instance_relative_config=True)
@@ -16,6 +16,7 @@ db = SQLAlchemy(app)
 
 lm = LoginManager()
 lm.init_app(app)
-oid = OpenID(app, os.path.join(app.config['BASEDIR'], 'tmp'))
+
+principals = Principal(app)
 
 from pmpserver import views, models
