@@ -2,11 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from . import db
+from sqlalchemy_utils import PasswordType
 
 class User(db.Model):
     # Columns
     id = db.Column(db.String, primary_key=True)
-    passwd = db.Column(db.String)
+    password = db.Column(
+        PasswordType(
+            schemes=['pbkdf2_sha512']
+        ),
+        nullable=False
+    )
+
     email = db.Column(db.String)
     name = db.Column(db.String)
     role = db.Column(db.String)

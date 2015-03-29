@@ -44,7 +44,7 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = load_user(form.id.data)
-        if (user is not None) and (form.password.data == user.passwd):
+        if (user is not None) and (form.password.data == user.password):
             login_user(user, remember=form.remember_me.data)
             # Tell Flask-Principal the identity changed
             identity_changed.send(current_app._get_current_object(),
@@ -90,25 +90,41 @@ def users():
 @app.route('/edit_user/<userid>', methods=['GET', 'POST'])
 def edit_user(userid):
     user = User.query.get_or_404(userid)
-    form = UserEditForm()
+    form = UserEditForm(request.form, user)
     if form.validate_on_submit():
-        form.copy_to(user)
+        form.populate_obj(user)
         db.session.commit()
-    form.copy_from(user)
     return render_template('edituser.html', form=form, user=user)
 
 @app.route('/add_user', methods=['GET', 'POST'])
 @admin_permission.require()
 def add_user():
-    form = UserEntryForm()
+    form = UserEntryForm(request.form)
     if form.validate_on_submit():
         user = User()
-        form.copy_to(user)
+        form.populate_obj(user)
         db.session.add(user)
         db.session.commit()
         flash('New user was successfully posted')
         return redirect(url_for('add_user'))
     return render_template('adduser.html', form=form)
+
+@app.route('/delete_user/<userid>')
+@admin_permission.require()
+def delete_user(userid):
+    user = User.query.get_or_404(userid)
+    db.session.delete(user)
+    db.session.commit()
+    return redirect(url_for('users'))
+
+@app.route('/password_reset/<userid>')
+@admin_permission.require()
+def password_reset(userid):
+    user = User.query.get_or_404(userid)
+    user.password = user.id
+    db.session.commit()
+    flash("<%s>'s password was successfully reset to the same as the user id." % user.id)
+    return redirect(url_for('users'))
 
 
 #-------------------------------------------------------------------------------
@@ -117,9 +133,6 @@ def add_user():
 @admin_permission.require()
 def do_admin_index():
     return Response('Only if you are an admin')
-
-
-
 
 #------------------------------------------------------------------------------
 
@@ -147,10 +160,6 @@ def project_list():
     path = projectsdir()
     files = [x for x in os.listdir(path) if os.path.isdir(os.path.join(path, x))]
     return render_template('projects.html', projects=files)
-
-@app.route('/delete_user/<userid>', methods=['POST'])
-def delete_user(userid):
-    return redirect(url_for('users'))
 
 #handle http request(Web API)
 @app.route('/pmp/api/projects/')

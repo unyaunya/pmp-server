@@ -1,29 +1,15 @@
 {% extends "base.html" %}
+{% from 'field.html' import field_as_tr %}
 {% block title %}ユーザ追加{% endblock %}
 {% block header %}ユーザ追加{% endblock %}
 {% block content %}
     <form action="{{ url_for('add_user') }}" method=post class=add-user>
       <table>
-        <tr>
-          <td>{{form.id.label}}</td>
-          <td>{{form.id()}}</td>
-	</tr>
-        <tr>
-          <td>{{form.password.label}}</td>
-          <td>{{form.password()}}</td>
-        </tr>
-        <tr>
-          <td>{{form.email.label}}</td>
-          <td>{{form.email()}}</td>
-        </tr>
-        <tr>
-          <td>{{form.name.label}}</td>
-          <td>{{form.name()}}</td>
-        </tr>
-        <tr>
-          <td>{{form.role.label}}</td>
-          <td>{{form.role()}}</td>
-        </tr>
+	{{ field_as_tr(form.id) }}
+	{{ field_as_tr(form.password) }}
+	{{ field_as_tr(form.email) }}
+	{{ field_as_tr(form.name) }}
+	{{ field_as_tr(form.role) }}
       </table>
       {{ form.csrf_token }}
       {{ form.hidden_tag() }}

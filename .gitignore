@@ -23,6 +23,13 @@ $RECYCLE.BIN/
 #sqlite
 *.db
 
+#backup files
+*.BAK
+
+#data files
+instance/db_repository/
+instance/tmp/
+
 # =========================
 # Operating System Files
 # =========================
@@ -47,5 +54,3 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
-
-instance/db_repository

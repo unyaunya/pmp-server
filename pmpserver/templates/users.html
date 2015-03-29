@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from 'field.html' import link_button %}
+
 {% block title %}ユーザ一覧{% endblock %}
 {% block header %}ユーザ一覧{% endblock %}
 {% block optionalmenu %}
@@ -9,12 +11,18 @@
 {% block content %}
     <p>全{{users|length}}件：</p>
     <table border="1">
-    <tr><th>ユーザＩＤ</th><th>e-mail</th><th>ユーザ名</th></tr>
+    <tr><th>ユーザＩＤ</th><th>ユーザ名</th><th>e-mail</th><th>ロール</th><th>操作</th></tr>
     {% for user in users %}
       <tr>
-         <td><a href="{{url_for('edit_user', userid=user.id)}}">{{user.id}}</a></td>
-         <td>{{user.email}}</td>
+         <td>{{user.id}}</td>
          <td>{{user.name}}</td>
+         <td>{{user.email}}</td>
+         <td>{{user.role}}</td>
+         <td>
+            {{link_button('編集', url_for('edit_user', userid=user.id))}}
+            {{link_button('削除', url_for('delete_user', userid=user.id))}}
+            {{link_button('パスワードリセット', url_for('password_reset', userid=user.id))}}
+         </td>
       </tr>
     {% endfor %}
     </table>

@@ -1,0 +1,13 @@
+{% macro field_as_tr(field) -%}
+  <tr>
+    <td>{{field.label}}</td>
+    <td>{{field()}}</td>
+    <td class=error>{{field.errors}}</td>
+  </tr>
+{%- endmacro %}
+
+
+{% macro link_button(caption, url) -%}
+  <button type="button" onclick="window.location.href='{{url}}'"><font size="2">{{caption}}</font></button>
+{%- endmacro %}
+

@@ -5,38 +5,38 @@ from flask.ext.wtf import Form
 from wtforms.fields import TextField, PasswordField, HiddenField
 from wtforms import StringField, BooleanField
 from wtforms.validators import Required, Email, DataRequired
+from wtforms_alchemy import model_form_factory
+from .models import User
+
+BaseModelForm = model_form_factory(Form)
+
+class ModelForm(BaseModelForm):
+    @classmethod
+    def get_session(self):
+        return db.session
 
 class LoginForm(Form):
     id = TextField('id', validators=[Required()])
     #email = TextField('ID', validators=[Email()])
-    password = PasswordField('Password', validators=[Required()])
+    password = PasswordField('Password', validators=[Required('パスワードが入力されていません。')])
     remember_me = BooleanField('remember_me', default=False)
 
-class UserEditForm(Form):
-    email = TextField('email', validators=[Email()])
-    name = TextField('name', validators=[])
-    role = TextField('role', validators=[])
+class ChangePasswordForm(Form):
+    old_password = PasswordField('古いパスワード', validators=[Required('新しいパスワードが入力されていません。')])
+    new_password = PasswordField('新しいワスワード', validators=[Required('古いパスワードが入力されていません。')])
 
-    def copy_to(self, user):
-        user.email = self.email.data
-        user.name = self.name.data
-        user.role = self.role.data
+class UserEditForm(ModelForm):
+    class Meta:
+        model = User
+        exclude = ['password']
 
-    def copy_from(self, user):
-        self.email.data = user.email
-        self.name.data = user.name
-        self.role.data = user.role
+    #email = TextField('email', validators=[Email('メールアドレスの形式になっていません。')])
+    #name = TextField('name', validators=[])
+    #role = TextField('role', validators=[])
 
-class UserEntryForm(UserEditForm):
-    id = TextField('id', validators=[Required()])
-    password = PasswordField('Password', validators=[Required()])
-
-    def copy_to(self, user):
-        super(UserEntryForm, self).copy_to(user)
-        user.id = self.id.data
-        user.passwd = self.password.data
-
-    def copy_from(self, user):
-        super(UserEntryForm, self).copy_from(user)
-        self.id.data = user.id
-        self.password.data = user.passwd
+class UserEntryForm(ModelForm):
+    class Meta:
+        model = User
+        include = ['id']
+    #id = TextField('id', validators=[Required()])
+    #password = PasswordField('Password', validators=[Required()])
