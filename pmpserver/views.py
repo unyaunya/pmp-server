@@ -5,17 +5,17 @@ import os
 import json
 import sqlite3
 from contextlib import closing
-from flask import Flask, Response, current_app, g, request, session, render_template, \
-     flash, redirect, url_for
 from datetime import datetime
+from flask import Flask, Response, current_app, g, request, session
+from flask import render_template, flash, redirect, url_for, abort
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from flask.ext.principal import Principal, UserNeed, RoleNeed
 from flask.ext.principal import Identity, identity_loaded, identity_changed
 
 from . import app, db, lm
-from .forms import LoginForm, UserEntryForm, UserEditForm
+from .forms import LoginForm, UserEntryForm, UserEditForm, ChangePasswordForm
 from .models import User
-from .permission import admin_permission
+from .permission import admin_permission, ChangePasswordPermission
 
 
 #from .util import ts
@@ -126,6 +126,22 @@ def password_reset(userid):
     flash("<%s>'s password was successfully reset to the same as the user id." % user.id)
     return redirect(url_for('users'))
 
+@app.route('/change_password/<userid>', methods=['GET', 'POST'])
+def change_password(userid):
+    permission = ChangePasswordPermission(userid)
+    if not permission.can():
+        abort(403)  # HTTP Forbidden
+
+    user = User.query.get_or_404(userid)
+    form = ChangePasswordForm(request.form)
+    if form.validate_on_submit():
+        if user.password != form.old_password.data:
+            flash("Invalid password.")
+        else:
+            user.password = form.new_password.data
+            db.session.commit()
+            flash("<%s>'s password was successfully changed." % user.id)
+    return render_template('change_password.html', form=form, user=user)
 
 #-------------------------------------------------------------------------------
 # protect a view with a principal for that need
