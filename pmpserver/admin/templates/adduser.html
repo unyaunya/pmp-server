@@ -3,7 +3,7 @@
 {% block title %}ユーザ追加{% endblock %}
 {% block header %}ユーザ追加{% endblock %}
 {% block content %}
-    <form action="{{ url_for('add_user') }}" method=post class=add-user>
+    <form action="{{ url_for('.add_user') }}" method=post class=add-user>
       <table>
 	{{ field_as_tr(form.id) }}
 	{{ field_as_tr(form.password) }}

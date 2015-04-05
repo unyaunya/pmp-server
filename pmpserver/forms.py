@@ -24,19 +24,3 @@ class LoginForm(Form):
 class ChangePasswordForm(Form):
     old_password = PasswordField('古いパスワード', validators=[Required('新しいパスワードが入力されていません。')])
     new_password = PasswordField('新しいワスワード', validators=[Required('古いパスワードが入力されていません。')])
-
-class UserEditForm(ModelForm):
-    class Meta:
-        model = User
-        exclude = ['password']
-
-    #email = TextField('email', validators=[Email('メールアドレスの形式になっていません。')])
-    #name = TextField('name', validators=[])
-    #role = TextField('role', validators=[])
-
-class UserEntryForm(ModelForm):
-    class Meta:
-        model = User
-        include = ['id']
-    #id = TextField('id', validators=[Required()])
-    #password = PasswordField('Password', validators=[Required()])
