@@ -23,3 +23,6 @@ from pmpserver import views, models
 
 from . import admin
 app.register_blueprint(admin.app, url_prefix="/admin")
+
+from . import userprofile
+app.register_blueprint(userprofile.app, url_prefix="/userprofile")

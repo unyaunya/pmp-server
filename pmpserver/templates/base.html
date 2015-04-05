@@ -31,7 +31,7 @@
                 <li><a href="/apikey.html">APIキー</a></li>
                 {% if current_user.is_authenticated() %}
                 <li><a href="{{url_for('admin.users')}}">ユーザ一覧</a></li>
-                <li><a href="/change_password/{{current_user.id}}">パスワード変更</a></li>
+                <li><a href="{{url_for('userprofile.change_password', userid=current_user.id)}}">パスワード変更</a></li>
                 {% endif %}
                 {% block optionalmenu %}
                 {% endblock %}
