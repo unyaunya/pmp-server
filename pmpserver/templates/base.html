@@ -11,9 +11,9 @@
 <div class=metanav>
     {% if current_user.is_authenticated() %}
         <p >ようこそ{{ current_user.name }}さん</p>
-        <a href="{{ url_for('logout') }}">log out</a>
+        <a href="{{ url_for('login.logout') }}">log out</a>
     {% else %}
-        <a href="{{ url_for('login') }}">log in</a>
+        <a href="{{ url_for('login.login') }}">log in</a>
     {% endif %}
 </div>
 <div class=page>

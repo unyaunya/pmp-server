@@ -21,6 +21,9 @@ principals = Principal(app)
 
 from pmpserver import views, models
 
+from . import login
+app.register_blueprint(login.app)
+
 from . import admin
 app.register_blueprint(admin.app, url_prefix="/admin")
 

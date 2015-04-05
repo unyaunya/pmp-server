@@ -9,7 +9,7 @@
 {% block header %}ログイン{% endblock %}
 {% block content %}
   {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
-  <form action="{{ url_for('login') }}" method=post>
+  <form action="{{ url_for('.login') }}" method=post>
     <table>
        <tr><td>ID </td><td>{{ form.id() }}</td></tr>
        <tr><td>パスワード</td><td>{{ form.password() }}<td></tr>
