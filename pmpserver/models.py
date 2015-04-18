@@ -39,7 +39,13 @@ class User(db.Model):
         return '<User %r email=%s>' % (self.id, self.email)
 
 
+class DataDictionary(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, unique=True)
+    definition = db.Column(db.String)
 
+    def __repr__(self):
+        return '<Data %s = %s>' % (self.id, self.definition)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key = True)

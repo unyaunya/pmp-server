@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from 'field.html' import field_as_tr %}
+{% block title %}データ辞書/エントリ追加{% endblock %}
+{% block header %}データ辞書/エントリ追加{% endblock %}
+{% block content %}
+    <form action="{{ url_for('.add') }}" method=post class=add-user>
+      <table>
+	{{ field_as_tr(form.name) }}
+	{{ field_as_tr(form.definition) }}
+      </table>
+      {{ form.csrf_token }}
+      {{ form.hidden_tag() }}
+      <input type=submit value="OK"/>
+    </form>
+{% endblock %}

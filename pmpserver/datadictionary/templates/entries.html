@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from 'field.html' import link_button %}
+
+{% block title %}データ辞書覧{% endblock %}
+{% block header %}データ辞書{% endblock %}
+{% block optionalmenu %}
+    {% if current_user.is_authenticated() %}
+        <li><a href="{{url_for('.add')}}">データ辞書追加</a></li>
+    {% endif %}
+{% endblock %}
+{% block content %}
+    <p>全{{entries|length}}件：</p>
+    <table border="1">
+    <tr><th>データＩＤ</th><th>定義</th><th>操作</th></tr>
+    {% for entry in entries %}
+      <tr>
+         <td>{{entry.name}}</td>
+         <td>{{entry.definition}}</td>
+         <td>
+            {{link_button('編集', url_for('.edit', id=entry.name))}}
+            {{link_button('削除', url_for('.delete', id=entry.name))}}
+         </td>
+      </tr>
+    {% endfor %}
+    </table>
+{% endblock %}

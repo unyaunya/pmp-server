@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from 'field.html' import field_as_tr %}
+{% block title %}データ辞書/エントリ編集{% endblock %}
+{% block header %}データ辞書/エントリ編集{% endblock %}
+{% block content %}
+    <form action="{{ url_for('.edit', id=entry.name) }}" method=post class=edit-user>
+      <table>
+     	{{ field_as_tr(form.name) }}
+	    {{ field_as_tr(form.definition) }}
+      </table>
+      {{ form.csrf_token }}
+      {{ form.hidden_tag() }}
+      <input type=submit value="更新"/>
+    </form>
+{% endblock %}

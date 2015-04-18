@@ -29,3 +29,6 @@ app.register_blueprint(admin.app, url_prefix="/admin")
 
 from . import userprofile
 app.register_blueprint(userprofile.app, url_prefix="/userprofile")
+
+from . import datadictionary
+app.register_blueprint(datadictionary.app, url_prefix="/datadictionary")

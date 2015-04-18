@@ -29,6 +29,7 @@
                 <li><a href="/install.html">インストール</a></li>
                 <li><a href="/project_list.html">プロジェクト一覧</a></li>
                 <li><a href="/apikey.html">APIキー</a></li>
+                <li><a href="{{url_for('datadictionary.entries')}}">データ辞書</a></li>
                 {% if current_user.is_authenticated() %}
                 <li><a href="{{url_for('admin.users')}}">ユーザ一覧</a></li>
                 <li><a href="{{url_for('userprofile.change_password', userid=current_user.id)}}">パスワード変更</a></li>
