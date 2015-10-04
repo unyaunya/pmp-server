@@ -29,6 +29,7 @@ $RECYCLE.BIN/
 #data files
 instance/db_repository/
 instance/tmp/
+migrations/
 
 # =========================
 # Operating System Files
